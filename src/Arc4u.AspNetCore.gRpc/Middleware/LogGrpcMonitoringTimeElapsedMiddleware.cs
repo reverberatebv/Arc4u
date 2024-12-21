@@ -25,7 +25,7 @@ public class LogGrpcMonitoringTimeElapsedMiddleware
         _log = extraLog;
     }
 
-    public async Task InvokeAsync(HttpContext context, ILogger logger)
+    public async Task Invoke(HttpContext context, ILogger logger)
     {
         var stopwatch = Stopwatch.StartNew();
 

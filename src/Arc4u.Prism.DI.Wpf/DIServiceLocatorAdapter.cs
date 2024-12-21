@@ -1,5 +1,5 @@
-using Arc4u.Dependency;
 using CommonServiceLocator;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Prism.DI;
 
@@ -8,11 +8,11 @@ namespace Prism.DI;
 /// </summary>
 public class DIServiceLocatorAdapter : ServiceLocatorImplBase
 {
-    private readonly IContainerResolve Container;
+    private readonly IServiceProvider Container;
     /// <summary>Exposes underlying Container for direct operation.</summary>
     /// <summary>Creates new locator as adapter for provided container.</summary>
     /// <param name="container">Container to use/adapt.</param>
-    public DIServiceLocatorAdapter(IContainerResolve container)
+    public DIServiceLocatorAdapter(IServiceProvider container)
     {
         Container = container;
     }
@@ -25,7 +25,7 @@ public class DIServiceLocatorAdapter : ServiceLocatorImplBase
     {
         ArgumentNullException.ThrowIfNull(serviceType);
 
-        var result = string.IsNullOrWhiteSpace(key) ? Container.Resolve(serviceType) : Container.Resolve(serviceType, key);
+        var result = string.IsNullOrWhiteSpace(key) ? Container.GetService(serviceType) : Container.GetRequiredKeyedService(serviceType, key);
         return result;
     }
 
@@ -38,6 +38,6 @@ public class DIServiceLocatorAdapter : ServiceLocatorImplBase
     {
         ArgumentNullException.ThrowIfNull(serviceType);
 
-        return Container.ResolveAll(serviceType);
+        return Container.GetServices(serviceType);
     }
 }
