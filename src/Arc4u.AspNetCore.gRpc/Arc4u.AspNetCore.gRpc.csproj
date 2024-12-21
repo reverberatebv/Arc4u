@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <PackageId>Arc4u.AspNetCore.gRpc</PackageId>
+    <NoWarn>$(NoWarn);IDE0130</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore.Server" Version="2.66.0" />

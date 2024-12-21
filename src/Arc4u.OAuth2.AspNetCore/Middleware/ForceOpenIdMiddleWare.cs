@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using AuthenticationProperties = Microsoft.AspNetCore.Authentication.AuthenticationProperties;
 
@@ -13,7 +12,6 @@ public class ForceOpenIdMiddleWare
 {
     private readonly RequestDelegate _next;
     private readonly ForceOpenIdMiddleWareOptions _options;
-    private ILogger<ForceOpenIdMiddleWare>? _logger;
 
     public ForceOpenIdMiddleWare(RequestDelegate next, ForceOpenIdMiddleWareOptions options)
     {
@@ -24,11 +22,8 @@ public class ForceOpenIdMiddleWare
         _options = options;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, ILogger<ForceOpenIdMiddleWare> logger)
     {
-        // Get the scoped instance of the container!
-        _logger ??= context.RequestServices.GetRequiredService<ILogger<ForceOpenIdMiddleWare>>();
-
         try
         {
             // if we have some part of the site working like a web page (like swagger, hangfire, etc...) and we need to force
@@ -44,7 +39,7 @@ public class ForceOpenIdMiddleWare
                                  context.Request.Path.Value.Equals(r, StringComparison.OrdinalIgnoreCase));
                 }))
                 {
-                    _logger.Technical().LogDebug("Force an OpenId connection.");
+                    logger.Technical().LogDebug("Force an OpenId connection.");
                     var cleanUri = new Uri(new Uri(context.Request.GetEncodedUrl()).GetLeftPart(UriPartial.Path));
                     if (Uri.TryCreate(_options.RedirectUrlForAuthority, UriKind.Absolute, out var authority))
                     {
@@ -59,7 +54,7 @@ public class ForceOpenIdMiddleWare
         }
         catch (Exception ex)
         {
-            _logger.Technical().LogException(ex);
+            logger.Technical().LogException(ex);
         }
 
         await _next(context).ConfigureAwait(false);

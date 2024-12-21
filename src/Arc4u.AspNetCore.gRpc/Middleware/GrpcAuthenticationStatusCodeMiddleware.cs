@@ -4,14 +4,14 @@ namespace Arc4u.AspNetCore.Middleware;
 
 public class GrpcAuthenticationStatusCodeMiddleware
 {
+    private readonly RequestDelegate _next;
+
     public GrpcAuthenticationStatusCodeMiddleware(RequestDelegate next)
     {
         _next = next ?? throw new ArgumentNullException(nameof(next));
     }
 
-    private readonly RequestDelegate _next;
-
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
         await _next.Invoke(context).ConfigureAwait(false);
 

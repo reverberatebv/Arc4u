@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Arc4u.Diagnostics;
 using Grpc.AspNetCore.Server;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Arc4u.AspNetCore.Middleware;
@@ -26,10 +25,8 @@ public class LogGrpcMonitoringTimeElapsedMiddleware
         _log = extraLog;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, ILogger logger)
     {
-        var logger = context.RequestServices.GetService<ILogger>();
-
         var stopwatch = Stopwatch.StartNew();
 
         await _next(context).ConfigureAwait(false);

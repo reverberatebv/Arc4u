@@ -1,17 +1,13 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Arc4u.Diagnostics;
 
-class Logger<T> : ILogger<T>
+class Logger<T>(ILoggerFactory loggerFactory, IServiceProvider serviceProvider) : ILogger<T>
 {
-    private readonly ILogger _logger;
-    private readonly IAddPropertiesToLog _addPropertiesToLog;
-
-    public Logger(ILoggerFactory loggerFactory, IAddPropertiesToLog addPropertiesToLog)
-    {
-        _logger = loggerFactory.CreateLogger<T>();
-        _addPropertiesToLog = addPropertiesToLog;
-    }
+    private readonly ILogger _logger = loggerFactory.CreateLogger<T>();
+    private IAddPropertiesToLog? _addPropertiesToLog;
+    private bool _propertiesInitialized;
 
     IDisposable? ILogger.BeginScope<TState>(TState state) => _logger.BeginScope(state);
 
@@ -32,10 +28,23 @@ class Logger<T> : ILogger<T>
                 }
             }
 
-            foreach (var property in _addPropertiesToLog.GetProperties())
+            if (!_propertiesInitialized)
+            {
+                try
+                {
+                    _addPropertiesToLog = serviceProvider.GetService<IAddPropertiesToLog>();
+                }
+                catch (Exception)
+                {
+                }
+                _propertiesInitialized = true;
+            }
+
+            foreach (var property in _addPropertiesToLog?.GetProperties() ?? new Dictionary<string, object>())
             {
                 properties.AddIfNotExist(property.Key, property.Value);
             }
+
         }
 
         _logger.Log(logLevel, eventId, state, exception, formatter);

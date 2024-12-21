@@ -19,7 +19,7 @@ public class ValidateResourcesRightMiddleware
         _options = options;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
         if (!context.Request.Path.HasValue)
         {

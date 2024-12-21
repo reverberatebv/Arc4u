@@ -18,10 +18,10 @@ public static class ServicesRegistrationExtension
     {
         // Add the Arc4u Logger<T> implementation.
         // Scoped is used because the logger now is linked to the authenticated user which is set per scope in the backend.
-        services.TryAddScoped(typeof(ILogger<>), typeof(Diagnostics.Logger<>));
+        services.TryAddTransient(typeof(ILogger<>), typeof(Diagnostics.Logger<>));
 
         // this injection is to have a ILogger<T> and we will erase the className via the fluent API.
-        services.AddScoped<ILogger>((serviceProvider) => serviceProvider.GetRequiredService<ILogger<LoggerMessage>>());
+        services.AddTransient<ILogger>((serviceProvider) => serviceProvider.GetRequiredService<ILogger<LoggerMessage>>());
 
         return services;
     }

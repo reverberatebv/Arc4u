@@ -3,7 +3,6 @@ using System.Globalization;
 using Arc4u.Diagnostics;
 using Arc4u.Security.Principal;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 
@@ -11,18 +10,15 @@ namespace Arc4u.OAuth2.Middleware;
 public class AddContextToPrincipalMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<AddContextToPrincipalMiddleware> _logger;
     private readonly ActivitySource? _activitySource;
 
-    public AddContextToPrincipalMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
+    public AddContextToPrincipalMiddleware(RequestDelegate next, IActivitySourceFactory activitySourceFactory)
     {
-        ArgumentNullException.ThrowIfNull(serviceProvider);
         _next = next ?? throw new ArgumentNullException(nameof(next));
-        _logger = serviceProvider.GetRequiredService<ILogger<AddContextToPrincipalMiddleware>>();
-        _activitySource = serviceProvider.GetService<IActivitySourceFactory>()?.GetArc4u();
+        _activitySource = activitySourceFactory.GetArc4u();
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, ILogger<AddContextToPrincipalMiddleware> logger)
     {
         ArgumentNullException.ThrowIfNull(context);
 
@@ -49,7 +45,7 @@ public class AddContextToPrincipalMiddleware
                 }
                 catch (Exception ex)
                 {
-                    _logger.Technical().LogException(ex);
+                    logger.Technical().LogException(ex);
                 }
             }
         }

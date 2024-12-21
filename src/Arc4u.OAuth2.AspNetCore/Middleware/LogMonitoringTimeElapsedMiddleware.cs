@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Arc4u.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Arc4u.OAuth2.Middleware;
@@ -26,11 +25,9 @@ public class LogMonitoringTimeElapsedMiddleware
         _log = extraLog;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(context);
-
-        var logger = context.RequestServices.GetService<ILogger>();
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -46,7 +43,7 @@ public class LogMonitoringTimeElapsedMiddleware
                 var descriptor = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
                 if (descriptor != null && descriptor.MethodInfo.DeclaringType is not null)
                 {
-                    logger?.Monitoring()
+                    logger.Monitoring()
                            .From(descriptor.MethodInfo.DeclaringType, descriptor.MethodInfo.Name)
                            .Information($"Time to complete method call")
                            .Add("Elapsed", stopwatch.Elapsed.TotalMilliseconds)
@@ -60,7 +57,7 @@ public class LogMonitoringTimeElapsedMiddleware
         }
         catch (Exception ex)
         {
-            logger?.Technical().From<LogMonitoringTimeElapsedMiddleware>().Exception(ex).Log();
+            logger.Technical().From<LogMonitoringTimeElapsedMiddleware>().Exception(ex).Log();
         }
     }
 }

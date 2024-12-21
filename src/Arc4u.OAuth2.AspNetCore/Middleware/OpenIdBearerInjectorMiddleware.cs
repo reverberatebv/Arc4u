@@ -12,19 +12,17 @@ namespace Arc4u.OAuth2.Middleware;
 
 public class OpenIdBearerInjectorMiddleware
 {
-    public OpenIdBearerInjectorMiddleware([DisallowNull] RequestDelegate next, [DisallowNull] OpenIdBearerInjectorSettingsOptions options)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
-
     private readonly OpenIdBearerInjectorSettingsOptions _options;
     private readonly RequestDelegate _next;
     private ActivitySource? _activitySource;
-    private ILogger<OpenIdBearerInjectorMiddleware>? _logger = default!;
 
-    public async Task Invoke([DisallowNull] HttpContext context)
+    public OpenIdBearerInjectorMiddleware([DisallowNull] RequestDelegate next, [DisallowNull] OpenIdBearerInjectorSettingsOptions options)
+    {
+        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _next = next ?? throw new ArgumentNullException(nameof(next));
+    }
+
+    public async Task InvokeAsync([DisallowNull] HttpContext context, IActivitySourceFactory activitySourceFactory, ILogger<OpenIdBearerInjectorMiddleware> logger)
     {
         if (context.User is not null && context.User.Identity is not null && context.User.Identity.IsAuthenticated && context.User.Identity.AuthenticationType!.Equals(_options.OpenIdSettings.Values[TokenKeys.AuthenticationTypeKey], StringComparison.InvariantCultureIgnoreCase))
         {
@@ -36,8 +34,7 @@ public class OpenIdBearerInjectorMiddleware
                 }
             }
 
-            _activitySource ??= context.RequestServices.GetService<IActivitySourceFactory>()?.GetArc4u();
-            _logger ??= context.RequestServices.GetService<ILogger<OpenIdBearerInjectorMiddleware>>();
+            _activitySource ??= activitySourceFactory.GetArc4u();
 
             using var activity = _activitySource?.StartActivity("Inject bearer token in header", ActivityKind.Producer);
             TokenInfo? tokenInfo = null;
@@ -50,7 +47,7 @@ public class OpenIdBearerInjectorMiddleware
 
                     if (provider is null)
                     {
-                        _logger?.Technical().LogError($"The token provider {_options.OboProviderKey} is not found!");
+                        logger.Technical().LogError($"The token provider {_options.OboProviderKey} is not found!");
                         return;
                     }
 
@@ -58,7 +55,7 @@ public class OpenIdBearerInjectorMiddleware
                 }
                 catch (Exception ex)
                 {
-                    _logger?.Technical().Exception(ex).Log();
+                    logger.Technical().Exception(ex).Log();
                 }
 
             }
@@ -70,7 +67,7 @@ public class OpenIdBearerInjectorMiddleware
 
                     if (provider is null)
                     {
-                        _logger?.Technical().LogError($"The token provider {_options.OpenIdSettings.Values[TokenKeys.ProviderIdKey]} is not found!");
+                        logger.Technical().LogError($"The token provider {_options.OpenIdSettings.Values[TokenKeys.ProviderIdKey]} is not found!");
                         return;
                     }
 
@@ -78,7 +75,7 @@ public class OpenIdBearerInjectorMiddleware
                 }
                 catch (Exception ex)
                 {
-                    _logger?.Technical().Exception(ex).Log();
+                    logger.Technical().Exception(ex).Log();
                 }
             }
 

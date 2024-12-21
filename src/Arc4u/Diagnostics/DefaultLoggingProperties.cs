@@ -6,25 +6,25 @@ namespace Arc4u.Diagnostics;
 [Export(typeof(IAddPropertiesToLog)), Scoped]
 public class DefaultLoggingProperties : IAddPropertiesToLog
 {
+    private readonly IApplicationContext applicationContext;
+
     public DefaultLoggingProperties(IApplicationContext applicationContext)
     {
-        _applicationContext = applicationContext;
+        this.applicationContext = applicationContext;
     }
-
-    private readonly IApplicationContext _applicationContext;
 
     public IDictionary<string, object> GetProperties()
     {
-        if (null != _applicationContext)
+        if (null != applicationContext)
         {
-            if (null != _applicationContext.Principal)
+            if (null != applicationContext.Principal)
             {
                 return new Dictionary<string, object>
                     {
-                        { LoggingConstants.ActivityId, _applicationContext.ActivityID },
-                        { LoggingConstants.Identity, (null != _applicationContext.Principal?.Profile)
-                                                                                        ? _applicationContext.Principal.Profile.Name ?? string.Empty
-                                                                                        : null != _applicationContext.Principal?.Identity ? _applicationContext.Principal.Identity.Name ?? string.Empty: string.Empty }
+                        { LoggingConstants.ActivityId, applicationContext.ActivityID },
+                        { LoggingConstants.Identity, (null != applicationContext.Principal?.Profile)
+                                                                                        ? applicationContext.Principal.Profile.Name ?? string.Empty
+                                                                                        : null != applicationContext.Principal?.Identity ? applicationContext.Principal.Identity.Name ?? string.Empty: string.Empty }
                     };
             }
         }

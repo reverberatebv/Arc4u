@@ -5,7 +5,14 @@ public static class ServiceProviderExtensions
 {
     public static bool TryGetService<T>(this IServiceProvider provider, out T? service)
     {
-        service = provider.GetService<T>();
+        try
+        {
+            service = provider.GetService<T>();
+        }
+        catch (Exception)
+        {
+            service = default;
+        }
         return null != service;
     }
 
@@ -37,7 +44,15 @@ public static class ServiceProviderExtensions
 
     public static bool TryGetService<T>(this IServiceProvider provider, string name, out T? service)
     {
-        service = provider.GetKeyedService<T>(name);
+        try
+        {
+            service = provider.GetKeyedService<T>(name);
+
+        }
+        catch (Exception)
+        {
+            service = default;
+        }
         return null != service;
     }
 
