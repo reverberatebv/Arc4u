@@ -19,7 +19,7 @@ internal class LoggerWrapperContext
     /// <exception cref="InvalidOperationException">LoggerContext not initialized</exception>
     public static IServiceScope CreateScope()
     {
-        if (_scopeFactory.IsValueCreated)
+        if (!_scopeFactory.IsValueCreated)
         {
             throw new InvalidOperationException("LoggerContext not initialized");
         }

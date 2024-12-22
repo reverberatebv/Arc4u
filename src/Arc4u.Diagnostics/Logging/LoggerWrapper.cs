@@ -59,9 +59,9 @@ public sealed class LoggerWrapper<T> : ILogger<T>
 
     private static class LoggerMessages
     {
-        private static readonly EventId TechnicalEventId = new(1000, "Technical");
-        private static readonly EventId BusinessEventId = new(2000, "Business");
-        private static readonly EventId MonitoringEventId = new(3000, "Monitoring");
+        public static readonly EventId TechnicalEventId = new(1000, "Technical");
+        public static readonly EventId BusinessEventId = new(2000, "Business");
+        public static readonly EventId MonitoringEventId = new(3000, "Monitoring");
 
         public static readonly Func<LogLevel, Action<ILogger, string, string, object, string, Exception?>> TechnicalLog =
             level => Logging.LoggerMessage.Define<string, string, object, string>(
@@ -130,15 +130,14 @@ public sealed class LoggerWrapper<T> : ILogger<T>
             logAction(
                 _logger,
                 _category.ToString(),
-                _contextType?.Name ?? "General",
+                _contextType?.Name ?? GetType().Name,
                 enrichedState,
                 message ?? string.Empty,
                 exception);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to log message with property providers");
-            _logger.Log(level, exception, message ?? string.Empty);
+            _logger.LogError(ex, "Failed to log message with property providers and eventId");
         }
     }
 
@@ -179,15 +178,13 @@ public sealed class LoggerWrapper<T> : ILogger<T>
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error getting property providers. Logging without additional properties.");
+            Log(LogLevel.Error, "Error getting property providers. Logging without additional properties.", ex);
             return new Dictionary<string, object?>(AdditionalFields);
         }
     }
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        Console.WriteLine("Log<TState> is called.");
-
         if (state is IEnumerable<KeyValuePair<string, object>> pairs)
         {
             foreach (var pair in pairs)
