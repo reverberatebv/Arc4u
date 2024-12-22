@@ -15,6 +15,7 @@ public sealed class LoggerWrapper<T> : ILogger<T>
     private readonly string _caller = string.Empty;
     private bool _disposed;
     private bool _includeStackTrace;
+    private readonly Lazy<IReadOnlyList<IAddPropertiesToLog>> _providers = new(Enumerable.Empty<IAddPropertiesToLog>().ToList());
 
     internal Dictionary<string, object?> AdditionalFields => _additionalFields;
     internal bool IncludeStackTrace { get => _includeStackTrace; set => _includeStackTrace = value; }
@@ -47,6 +48,13 @@ public sealed class LoggerWrapper<T> : ILogger<T>
         _category = category;
         _contextType = contextType;
         _caller = caller;
+
+
+        _providers = new Lazy<IReadOnlyList<IAddPropertiesToLog>>(() =>
+        {
+            using var scope = LoggerWrapperContext.CreateScope();
+            return scope.ServiceProvider.GetServices<IAddPropertiesToLog>().ToList();
+        });
     }
 
     private static class LoggerMessages
@@ -56,19 +64,19 @@ public sealed class LoggerWrapper<T> : ILogger<T>
         private static readonly EventId MonitoringEventId = new(3000, "Monitoring");
 
         public static readonly Func<LogLevel, Action<ILogger, string, string, object, string, Exception?>> TechnicalLog =
-            level => Microsoft.Extensions.Logging.LoggerMessage.Define<string, string, object, string>(
+            level => Logging.LoggerMessage.Define<string, string, object, string>(
                 level,
                 TechnicalEventId,
                 "{Category} [{Context}] [{@State}] {Message}");
 
         public static readonly Func<LogLevel, Action<ILogger, string, string, object, string, Exception?>> BusinessLog =
-            level => Microsoft.Extensions.Logging.LoggerMessage.Define<string, string, object, string>(
+            level => Logging.LoggerMessage.Define<string, string, object, string>(
                 level,
                 BusinessEventId,
                 "{Category} [{Context}] [{@State}] {Message}");
 
         public static readonly Func<LogLevel, Action<ILogger, string, string, object, string, Exception?>> MonitoringLog =
-            level => Microsoft.Extensions.Logging.LoggerMessage.Define<string, string, object, string>(
+            level => Logging.LoggerMessage.Define<string, string, object, string>(
                 level,
                 MonitoringEventId,
                 "{Category} [{Context}] [{@State}] {Message}");
@@ -93,7 +101,7 @@ public sealed class LoggerWrapper<T> : ILogger<T>
 
             if (exception is not null)
             {
-                //properties.AddIfNotExist(LoggingConstants.UnwrappedException, exception.ToFormattedstring());
+                properties.AddIfNotExist(LoggingConstants.UnwrappedException, exception.ToFormattedstring());
             }
 
             properties.AddIfNotExist(LoggingConstants.MethodName, _caller);
@@ -152,12 +160,8 @@ public sealed class LoggerWrapper<T> : ILogger<T>
 
         try
         {
-            using var scope = LoggerWrapperContext.CreateScope();
-            var providers = scope.ServiceProvider
-                .GetServices<IAddPropertiesToLog>();
-
             properties = new Dictionary<string, object?>(AdditionalFields);
-            var definedProperties = providers.Select(x => x.GetProperties()).SelectMany(x => x);
+            var definedProperties = _providers.Value.Select(x => x.GetProperties()).SelectMany(x => x);
             if (definedProperties != null)
             {
                 foreach (var property in definedProperties)

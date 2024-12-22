@@ -3,17 +3,27 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Arc4u.Diagnostics.Logging;
 internal class LoggerWrapperContext
 {
-    private static IServiceScopeFactory? _scopeFactory;
+    private static Lazy<IServiceScopeFactory> _scopeFactory = default!;
 
+    /// <summary>
+    /// Initializes the specified service provider.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
     public static void Initialize(IServiceProvider serviceProvider)
-        => _scopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+        => _scopeFactory = new Lazy<IServiceScopeFactory>(serviceProvider.GetRequiredService<IServiceScopeFactory>());
 
+    /// <summary>
+    /// Creates the scope.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException">LoggerContext not initialized</exception>
     public static IServiceScope CreateScope()
     {
-        if (_scopeFactory == null)
+        if (_scopeFactory.IsValueCreated)
         {
             throw new InvalidOperationException("LoggerContext not initialized");
         }
-        return _scopeFactory.CreateScope();
+
+        return _scopeFactory.Value.CreateScope();
     }
 }

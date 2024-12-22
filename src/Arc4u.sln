@@ -98,8 +98,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arc4u.AspNetCore.Results", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arc4u.Dependency.Tool", "Arc4u.Dependency.Tool\Arc4u.Dependency.Tool.csproj", "{2C83BE21-3C11-46B2-9831-5B84E4912BFB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{79AF42B4-1D21-4694-BF9C-AF29BEEA98E9}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B9419F5B-9CF3-4247-9929-7AF2362FD8E3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E8E0B4BA-5659-40E6-94C8-CA6D9F339101}"
