@@ -49,7 +49,6 @@ public sealed class LoggerWrapper<T> : ILogger<T>
         _contextType = contextType;
         _caller = caller;
 
-
         _providers = new Lazy<IReadOnlyList<IAddPropertiesToLog>>(() =>
         {
             using var scope = LoggerWrapperContext.CreateScope();
@@ -82,7 +81,7 @@ public sealed class LoggerWrapper<T> : ILogger<T>
                 "{Category} [{Context}] [{@State}] {Message}");
     }
 
-    private void Log(LogLevel level, string? message, Exception? exception = null)
+    private void Log(LogLevel level, EventId eventId, string? message, Exception? exception = null)
     {
         ThrowIfDisposed();
 
@@ -104,6 +103,7 @@ public sealed class LoggerWrapper<T> : ILogger<T>
                 properties.AddIfNotExist(LoggingConstants.UnwrappedException, exception.ToFormattedstring());
             }
 
+            properties.AddIfNotExist(LoggingConstants.SubEventId, eventId.Id);
             properties.AddIfNotExist(LoggingConstants.MethodName, _caller);
             properties.AddIfNotExist(LoggingConstants.Class, _contextType?.FullName ?? nameof(_contextType));
             properties.AddIfNotExist(LoggingConstants.Category, (short)_category);
@@ -178,7 +178,7 @@ public sealed class LoggerWrapper<T> : ILogger<T>
         }
         catch (Exception ex)
         {
-            Log(LogLevel.Error, "Error getting property providers. Logging without additional properties.", ex);
+            Log(LogLevel.Error, default, "Error getting property providers. Logging without additional properties.", ex);
             return new Dictionary<string, object?>(AdditionalFields);
         }
     }
@@ -193,7 +193,7 @@ public sealed class LoggerWrapper<T> : ILogger<T>
             }
         }
 
-        Log(logLevel, formatter(state, exception), exception);
+        Log(logLevel, eventId, formatter(state, exception), exception);
     }
 
     public bool IsEnabled(LogLevel logLevel) => _logger.IsEnabled(logLevel);

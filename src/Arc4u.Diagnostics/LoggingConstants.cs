@@ -21,4 +21,6 @@ public static class LoggingConstants
     public const string Category = "Category";
 
     public const string UnwrappedException = "UnwrappedException";
+
+    public const string SubEventId = "SubEventId";
 }

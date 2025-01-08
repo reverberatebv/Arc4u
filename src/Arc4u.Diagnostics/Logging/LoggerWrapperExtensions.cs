@@ -133,6 +133,7 @@ public static class LoggerWrapperExtensions
             LoggingConstants.ProcessId or
             LoggingConstants.Stacktrace or
             LoggingConstants.UnwrappedException or
+            LoggingConstants.SubEventId or
             LoggingConstants.ThreadId =>
             throw new ReservedLoggingKeyException(key),
             _ => key,
